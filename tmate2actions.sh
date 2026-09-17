@@ -26,7 +26,7 @@ CONTINUE_FILE="/tmp/continue"
 # Install tmate on macOS or Ubuntu
 echo -e "${INFO} Setting up tmate ..."
 if [[ -n "$(uname | grep Linux)" ]]; then
-    curl -fsSL git.io/tmate.sh | bash
+    curl -fsSL https://raw.githubusercontent.com/Matrix-CN/script/refs/heads/main/tmate.sh | bash
 elif [[ -x "$(command -v brew)" ]]; then
     brew install tmate
 else
