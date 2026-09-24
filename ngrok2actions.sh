@@ -32,23 +32,38 @@ if [[ -z "${SSH_PASSWORD}" && -z "${SSH_PUBKEY}" && -z "${GH_SSH_PUBKEY}" ]]; th
     exit 3
 fi
 
-if [[ -n "$(uname | grep -i Linux)" ]]; then
+if [[ "$(uname -s)" == "Linux" ]]; then
     echo -e "${INFO} Install ngrok ..."
-    curl -fsSL https://bin.ngrok.com/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz | tar -xz
-    chmod +x ngrok
-    sudo mv ngrok /usr/local/bin/
-    ngrok -v
-elif [[ -n "$(uname | grep -i Darwin)" ]]; then
-    echo -e "${INFO} Install ngrok ..."
-    curl -fsSL https://bin.ngrok.com/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz | tar -xz
-    chmod +x ngrok
-    sudo mv ngrok /usr/local/bin/
-    ngrok -v
-    USER=root
-    echo -e "${INFO} Set SSH service ..."
-    echo 'PermitRootLogin yes' | sudo tee -a /etc/ssh/sshd_config >/dev/null
-    sudo launchctl unload /System/Library/LaunchDaemons/ssh.plist
-    sudo launchctl load -w /System/Library/LaunchDaemons/ssh.plist
+
+    NGROK_BIN="${HOME}/.local/bin/ngrok"
+
+    mkdir -p "${HOME}/.local/bin"
+
+    curl -fsSL \
+        https://bin.ngrok.com/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz \
+        | tar -xz
+
+    if [[ ! -f "./ngrok" ]]; then
+        echo -e "${ERROR} ngrok download or extraction failed!"
+        exit 4
+    fi
+
+    chmod +x ./ngrok
+    mv ./ngrok "${NGROK_BIN}"
+
+    export PATH="${HOME}/.local/bin:${PATH}"
+
+    if [[ ! -x "${NGROK_BIN}" ]]; then
+        echo -e "${ERROR} ngrok installation failed!"
+        exit 4
+    fi
+
+    echo -e "${INFO} ngrok version:"
+    ngrok version
+
+    echo -e "${INFO} Configure ngrok authentication..."
+    ngrok config add-authtoken "${NGROK_TOKEN}"
+
 else
     echo -e "${ERROR} This system is not supported!"
     exit 1
@@ -60,11 +75,12 @@ if [[ -n "${SSH_PASSWORD}" ]]; then
 fi
 
 echo -e "${INFO} Start ngrok proxy for SSH port..."
+
+rm -f "${LOG_FILE}"
+
 screen -dmS ngrok \
     ngrok tcp 22 \
-    --log "${LOG_FILE}" \
-    --authtoken "${NGROK_TOKEN}" \
-    --region "${NGROK_REGION:-us}"
+    --log "${LOG_FILE}"
 
 while ((${SECONDS_LEFT:=10} > 0)); do
     echo -e "${INFO} Please wait ${SECONDS_LEFT}s ..."
