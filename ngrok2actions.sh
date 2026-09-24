@@ -42,11 +42,9 @@ if [[ -n "$(uname | grep -i Linux)" ]]; then
     ngrok -v
 elif [[ -n "$(uname | grep -i Darwin)" ]]; then
     echo -e "${INFO} Install ngrok ..."
-    curl -fsSL https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-darwin-amd64.zip -o ngrok.zip
-    unzip ngrok.zip ngrok
-    rm ngrok.zip
+    curl -fsSL https://bin.ngrok.com/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz | tar -xz
     chmod +x ngrok
-    sudo mv ngrok /usr/local/bin
+    sudo mv ngrok /usr/local/bin/
     ngrok -v
     USER=root
     echo -e "${INFO} Set SSH service ..."
